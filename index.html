@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemistry Practice: Names & Formulas</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --bg: #f4f7f6;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--primary);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: #dcdde1;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .card {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 500px;
+            padding: 40px 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .label {
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .display-area {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 20px 0;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .answer-area {
+            font-size: 1.8rem;
+            color: var(--secondary);
+            margin: 20px 0;
+            min-height: 60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .answer-area.visible {
+            opacity: 1;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        button.action {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        .gen-btn { background: var(--primary); color: white; }
+        .check-btn { background: var(--accent); color: white; grid-column: span 2; }
+        
+        button.action:active { transform: scale(0.98); }
+        sub { font-size: 0.6em; vertical-align: sub; }
+
+        @media (max-width: 400px) {
+            .display-area { font-size: 1.8rem; }
+            .answer-area { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('ionic')">Ionic</button>
+        <button class="tab-btn" onclick="switchTab('covalent')">Covalent</button>
+    </div>
+
+    <div class="card">
+        <div id="mode-label" class="label">Press a button to start</div>
+        <div id="question" class="display-area">Ready?</div>
+        <hr style="border: 0; border-top: 1px solid #eee;">
+        <div id="answer" class="answer-area">---</div>
+    </div>
+
+    <div class="controls">
+        <button class="action gen-btn" onclick="generate('name')">Generate Name</button>
+        <button class="action gen-btn" onclick="generate('formula')">Generate Formula</button>
+        <button class="action check-btn" onclick="showAnswer()">Check Answer</button>
+    </div>
+
+    <script>
+        // Data embedded from your CSVs
+        const ionicData = {
+            cations: [
+                { name: "ammonium", sym: "NH4", charge: 1 },
+                { name: "cesium", sym: "Cs", charge: 1 },
+                { name: "copper (I)", sym: "Cu", charge: 1 },
+                { name: "gold (I)", sym: "Au", charge: 1 },
+                { name: "hydrogen", sym: "H", charge: 1 },
+                { name: "lithium", sym: "Li", charge: 1 },
+                { name: "potassium", sym: "K", charge: 1 },
+                { name: "silver", sym: "Ag", charge: 1 },
+                { name: "sodium", sym: "Na", charge: 1 },
+                { name: "barium", sym: "Ba", charge: 2 },
+                { name: "cadmium", sym: "Cd", charge: 2 },
+                { name: "calcium", sym: "Ca", charge: 2 },
+                { name: "cobalt (II)", sym: "Co", charge: 2 },
+                { name: "copper (II)", sym: "Cu", charge: 2 },
+                { name: "iron (II)", sym: "Fe", charge: 2 },
+                { name: "lead (II)", sym: "Pb", charge: 2 },
+                { name: "magnesium", sym: "Mg", charge: 2 },
+                { name: "manganese (II)", sym: "Mn", charge: 2 },
+                { name: "mercury (II)", sym: "Hg", charge: 2 },
+                { name: "nickel (II)", sym: "Ni", charge: 2 },
+                { name: "strontium", sym: "Sr", charge: 2 },
+                { name: "tin (II)", sym: "Sn", charge: 2 },
+                { name: "zinc", sym: "Zn", charge: 2 },
+                { name: "aluminum", sym: "Al", charge: 3 },
+                { name: "chromium (III)", sym: "Cr", charge: 3 },
+                { name: "iron (III)", sym: "Fe", charge: 3 }
+            ],
+            anions: [
+                { name: "acetate", sym: "CH3COO", charge: 1 },
+                { name: "bromide", sym: "Br", charge: 1 },
+                { name: "chlorate", sym: "ClO3", charge: 1 },
+                { name: "chloride", sym: "Cl", charge: 1 },
+                { name: "chlorite", sym: "ClO2", charge: 1 },
+                { name: "cyanide", sym: "CN", charge: 1 },
+                { name: "fluoride", sym: "F", charge: 1 },
+                { name: "hydroxide", sym: "OH", charge: 1 },
+                { name: "hypochlorite", sym: "ClO", charge: 1 },
+                { name: "iodide", sym: "I", charge: 1 },
+                { name: "nitrate", sym: "NO3", charge: 1 },
+                { name: "nitrite", sym: "NO2", charge: 1 },
+                { name: "perchlorate", sym: "ClO4", charge: 1 },
+                { name: "permanganate", sym: "MnO4", charge: 1 },
+                { name: "carbonate", sym: "CO3", charge: 2 },
+                { name: "chromate", sym: "CrO4", charge: 2 },
+                { name: "dichromate", sym: "Cr2O7", charge: 2 },
+                { name: "oxalate", sym: "C2O4", charge: 2 },
+                { name: "oxide", sym: "O", charge: 2 },
+                { name: "peroxide", sym: "O2", charge: 2 },
+                { name: "silicate", sym: "SiO3", charge: 2 },
+                { name: "sulfate", sym: "SO4", charge: 2 },
+                { name: "sulfide", sym: "S", charge: 2 },
+                { name: "sulfite", sym: "SO3", charge: 2 },
+                { name: "arsenate", sym: "AsO4", charge: 3 },
+                { name: "phosphate", sym: "PO4", charge: 3 },
+                { name: "phosphide", sym: "P", charge: 3 },
+                { name: "phosphite", sym: "PO3", charge: 3 }
+            ]
+        };
+
+        const covalentData = {
+            prefixes: ["mono", "di", "tri", "tetra", "penta", "hexa", "hepta", "octa", "nona", "deca"],
+            elements: [
+                { name: "carbon", sym: "C", ide: "carbide" },
+                { name: "silicon", sym: "Si", ide: "silicide" },
+                { name: "nitrogen", sym: "N", ide: "nitride" },
+                { name: "phosphorus", sym: "P", ide: "phosphide" },
+                { name: "arsenic", sym: "As", ide: "arsenide" },
+                { name: "oxygen", sym: "O", ide: "oxide" },
+                { name: "sulfur", sym: "S", ide: "sulfide" },
+                { name: "selenium", sym: "Se", ide: "selenide" },
+                { name: "fluorine", sym: "F", ide: "fluoride" },
+                { name: "chlorine", sym: "Cl", ide: "chloride" },
+                { name: "bromine", sym: "Br", ide: "bromide" },
+                { name: "iodine", sym: "I", ide: "iodide" }
+            ]
+        };
+
+        let currentTab = 'ionic';
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('question').innerText = "Ready?";
+            document.getElementById('answer').classList.remove('visible');
+        }
+
+        function gcd(a, b) {
+            return b ? gcd(b, a % b) : a;
+        }
+
+        function formatSubscripts(text) {
+            return text.replace(/(\d+)/g, '<sub>$1</sub>');
+        }
+
+        function generate(type) {
+            const qElem = document.getElementById('question');
+            const aElem = document.getElementById('answer');
+            const label = document.getElementById('mode-label');
+            aElem.classList.remove('visible');
+
+            if (currentTab === 'ionic') {
+                const c = ionicData.cations[Math.floor(Math.random() * ionicData.cations.length)];
+                const a = ionicData.anions[Math.floor(Math.random() * ionicData.anions.length)];
+                
+                // Logic to balance charge
+                const common = gcd(c.charge, a.charge);
+                const cSub = a.charge / common;
+                const aSub = c.charge / common;
+
+                const cPart = (cSub > 1 && (c.sym.match(/[A-Z]/g).length > 1 || /\d/.test(c.sym))) ? `(${c.sym})${cSub}` : `${c.sym}${cSub > 1 ? cSub : ''}`;
+                const aPart = (aSub > 1 && (a.sym.match(/[A-Z]/g).length > 1 || /\d/.test(a.sym))) ? `(${a.sym})${aSub}` : `${a.sym}${aSub > 1 ? aSub : ''}`;
+                
+                const formula = formatSubscripts(cPart + aPart);
+                const name = c.name + " " + a.name;
+
+                if (type === 'name') {
+                    label.innerText = "Write the Formula for:";
+                    qElem.innerText = name;
+                    aElem.innerHTML = formula;
+                } else {
+                    label.innerText = "Name this Formula:";
+                    qElem.innerHTML = formula;
+                    aElem.innerText = name;
+                }
+            } else {
+                // Covalent Logic
+                const e1 = covalentData.elements[Math.floor(Math.random() * covalentData.elements.length)];
+                let e2 = covalentData.elements[Math.floor(Math.random() * covalentData.elements.length)];
+                while(e1 === e2) e2 = covalentData.elements[Math.floor(Math.random() * covalentData.elements.length)];
+
+                const p1Idx = Math.floor(Math.random() * covalentData.prefixes.length);
+                const p2Idx = Math.floor(Math.random() * covalentData.prefixes.length);
+                const p1 = covalentData.prefixes[p1Idx];
+                const p2 = covalentData.prefixes[p2Idx];
+
+                const name = (p1 === 'mono' ? '' : p1) + e1.name + " " + p2 + e2.ide;
+                const formula = formatSubscripts(`${e1.sym}${p1Idx + 1 > 1 ? p1Idx + 1 : ''}${e2.sym}${p2Idx + 1 > 1 ? p2Idx + 1 : ''}`);
+
+                if (type === 'name') {
+                    label.innerText = "Write the Formula for:";
+                    qElem.innerText = name;
+                    aElem.innerHTML = formula;
+                } else {
+                    label.innerText = "Name this Formula:";
+                    qElem.innerHTML = formula;
+                    aElem.innerText = name;
+                }
+            }
+        }
+
+        function showAnswer() {
+            document.getElementById('answer').classList.add('visible');
+        }
+    </script>
+</body>
+</html>
