@@ -87,7 +87,10 @@
         return cPrefix + cStr + aStr;
     }
 
-    function format(txt) { return txt.replace(/(\d+)/g, '<sub>$1</sub>'); }
+    function format(txt) { 
+    // This only targets numbers that follow a letter or ')'
+    return txt.replace(/([A-Za-z\)])(\d+)/g, '$1<sub>$2</sub>'); 
+}
 
     function generate(type) {
         const display = document.getElementById('equation-display');
