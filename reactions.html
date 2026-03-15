@@ -132,7 +132,7 @@
                 const finalAC = coeffAC == 1 ? '' : coeffAC;
                 const finalB = coeffB == 1 ? '' : coeffB;
 
-                answer.innerHTML = "Balanced: " + format(`${finalAC}${makeFormula(pure, a1)} + ${finalB}${c1.s}${p2_sub > 1 ? p2_sub : ''}`);
+               answer.innerHTML = "Balanced: " + format(`${finalAC ? '<b>'+finalAC+'</b>' : ''}${makeFormula(pure, a1)} + ${finalB ? '<b>'+finalB+'</b>' : ''}${c1.s}${p2_sub > 1 ? p2_sub : ''}`);
             } else {
                 answer.innerHTML = "Result: No Reaction (NR)";
             }
@@ -157,7 +157,7 @@
             const n3 = (n1 * v1) / v5;   // Coeff for AD
             const n4 = (n2 * v3) / v7;   // Coeff for CB
 
-            answer.innerHTML = "Balanced: " + format(`${n3 == 1 ? '' : n3}${makeFormula(c1, a2)} + ${n4 == 1 ? '' : n4}${makeFormula(c2, a1)}`);
+            answer.innerHTML = "Balanced: " + format(`${n3 == 1 ? '' : '<b>'+n3+'</b>'}${makeFormula(c1, a2)} + ${n4 == 1 ? '' : '<b>'+n4+'</b>'}${makeFormula(c2, a1)}`);
         }
     }
 
