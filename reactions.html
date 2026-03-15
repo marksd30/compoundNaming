@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reaction Predictor & Balancer</title>
+    <style>
+        :root { --primary: #2c3e50; --secondary: #27ae60; --accent: #e67e22; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { width: 100%; max-width: 800px; display: grid; grid-template-columns: 1fr 250px; gap: 20px; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); text-align: center; }
+        .activity-series { background: #fff; padding: 15px; border-radius: 10px; border-left: 5px solid var(--accent); font-size: 0.9rem; }
+        .display-area { font-size: 1.8rem; font-weight: bold; margin: 30px 0; min-height: 100px; line-height: 1.5; }
+        .answer-area { font-size: 1.4rem; color: var(--secondary); margin-top: 20px; padding: 15px; border-top: 2px dashed #eee; opacity: 0; transition: 0.3s; }
+        .visible { opacity: 1; }
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        button { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-gen { background: var(--primary); color: white; }
+        .btn-check { background: var(--accent); color: white; grid-column: span 2; }
+        button:active { transform: scale(0.98); }
+        sub { font-size: 0.6em; position: relative; bottom: -0.2em; }
+        @media (max-width: 600px) { .container { grid-template-columns: 1fr; } .activity-series { order: 2; } }
+    </style>
+</head>
+<body>
+
+    <h2 style="color: var(--primary);">Chemical Reaction Predictor</h2>
+
+    <div class="container">
+        <div class="card">
+            <div id="mode-label" style="text-transform: uppercase; color: #7f8c8d; font-size: 0.8rem;">Select a reaction type</div>
+            <div id="equation-display" class="display-area">Ready to practice?</div>
+            <div id="answer-display" class="answer-area"></div>
+            
+            <div class="controls">
+                <button class="btn-gen" onclick="generate('single')">Single Replacement</button>
+                <button class="btn-gen" onclick="generate('double')">Double Replacement</button>
+                <button class="btn-check" onclick="showAnswer()">Check Answer & Balancing</button>
+            </div>
+        </div>
+
+        <div class="activity-series">
+            <strong>Activity Series</strong><br><br>
+            <small>Most Active ↓</small><br>
+            Li, K, Ba, Sr, Ca, Na, Mg, Al, Mn, Zn, Cr, Fe, Cd, Co, Ni, Sn, Pb, [H], Cu, Hg, Ag, Pt, Au
+            <br><br>
+            <strong>Halogens</strong><br>
+            F<sub>2</sub> > Cl<sub>2</sub> > Br<sub>2</sub> > I<sub>2</sub>
+        </div>
+    </div>
+
+<script>
+    // Data structures
+    const cations = [
+        { n: "Sodium", s: "Na", c: 1 }, { n: "Potassium", s: "K", c: 1 }, { n: "Silver", s: "Ag", c: 1 },
+        { n: "Magnesium", s: "Mg", c: 2 }, { n: "Calcium", s: "Ca", c: 2 }, { n: "Zinc", s: "Zn", c: 2 },
+        { n: "Barium", s: "Ba", c: 2 }, { n: "Aluminum", s: "Al", c: 3 }, { n: "Iron (III)", s: "Fe", c: 3 },
+        { n: "Copper (II)", s: "Cu", c: 2 }, { n: "Lead (II)", s: "Pb", c: 2 }
+    ];
+    const anions = [
+        { n: "Chloride", s: "Cl", c: 1 }, { n: "Bromide", s: "Br", c: 1 }, { n: "Nitrate", s: "NO3", c: 1 },
+        { n: "Sulfate", s: "SO4", c: 2 }, { n: "Carbonate", s: "CO3", c: 2 }, { n: "Phosphate", s: "PO4", c: 3 }
+    ];
+    const series = ["Li", "K", "Ba", "Sr", "Ca", "Na", "Mg", "Al", "Mn", "Zn", "Cr", "Fe", "Cd", "Co", "Ni", "Sn", "Pb", "H", "Cu", "Hg", "Ag", "Pt", "Au"];
+    const diatomics = ["H", "N", "O", "F", "Cl", "Br", "I"];
+
+    function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+
+    function makeFormula(cat, ani) {
+        const common = gcd(cat.c, ani.c);
+        const cSub = ani.c / common;
+        const aSub = cat.c / common;
+        const cPart = (cSub > 1 && (cat.s.length > 2 || /\d/.test(cat.s))) ? `(${cat.s})${cSub}` : `${cat.s}${cSub > 1 ? cSub : ''}`;
+        const aPart = (aSub > 1 && (ani.s.length > 2 || /\d/.test(ani.s))) ? `(${ani.s})${aSub}` : `${ani.s}${aSub > 1 ? aSub : ''}`;
+        return cPart + aPart;
+    }
+
+    function format(txt) { return txt.replace(/(\d+)/g, '<sub>$1</sub>'); }
+
+    function generate(type) {
+        const display = document.getElementById('equation-display');
+        const answer = document.getElementById('answer-display');
+        answer.classList.remove('visible');
+        
+        if(type === 'single') {
+            document.getElementById('mode-label').innerText = "Single Replacement";
+            const cat1 = cations[Math.floor(Math.random() * cations.length)];
+            const ani1 = anions[Math.floor(Math.random() * anions.length)];
+            const pureElement = cations[Math.floor(Math.random() * cations.length)];
+            
+            const react1 = pureElement.s + (diatomics.includes(pureElement.s) ? "2" : "");
+            const react2 = makeFormula(cat1, ani1);
+            display.innerHTML = format(`${react1} + ${react2} → ???`);
+
+            // Logic: Is pure element higher in series than cat1?
+            const pos1 = series.indexOf(pureElement.s);
+            const pos2 = series.indexOf(cat1.s);
+
+            if (pos1 < pos2 && pos1 !== -1 && pos2 !== -1) {
+                const prod1 = makeFormula(pureElement, ani1);
+                const prod2 = cat1.s + (diatomics.includes(cat1.s) ? "2" : "");
+                answer.innerHTML = "Result: " + format(`${prod1} + ${prod2}`) + "<br><small>(Balance on your paper!)</small>";
+            } else {
+                answer.innerHTML = "Result: No Reaction (NR)";
+            }
+        } else {
+            document.getElementById('mode-label').innerText = "Double Replacement";
+            const c1 = cations[Math.floor(Math.random() * cations.length)];
+            const a1 = anions[Math.floor(Math.random() * anions.length)];
+            let c2 = cations[Math.floor(Math.random() * cations.length)];
+            let a2 = anions[Math.floor(Math.random() * anions.length)];
+            
+            const r1 = makeFormula(c1, a1);
+            const r2 = makeFormula(c2, a2);
+            display.innerHTML = format(`${r1} + ${r2} → ???`);
+            
+            const p1 = makeFormula(c1, a2);
+            const p2 = makeFormula(c2, a1);
+            answer.innerHTML = "Result: " + format(`${p1} + ${p2}`) + "<br><small>(Balance on your paper!)</small>";
+        }
+    }
+
+    function showAnswer() { document.getElementById('answer-display').classList.add('visible'); }
+</script>
+</body>
+</html>
